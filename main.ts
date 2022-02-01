@@ -59,8 +59,15 @@ class workbenchNameModal extends FuzzySuggestModal<string> {
     async onChooseItem(item: string, evt: MouseEvent | KeyboardEvent): void {
 	const {getPropertyValue} = app.plugins.plugins["metaedit"].api
 	//app.vault.getAbstractFileByPath(item)
-	const URL = await getPropertyValue(this.settings.yamlGrabbed, item);
-	window.open(URL);
+	// TODO: regex should have a rebust default and be configurable
+	const rTest = /^https?:\/\/(?:[A-Za-z]*\.){1,}[A-Za-z]{2,3}/
+	const yamlGrabbed = this.settings.yamlGrabbed;
+	const URL = rTest.exec(await getPropertyValue(yamlGrabbed, item));
+	if (URL) {
+		window.open(URL);
+	} else {
+		new Notice(`YAML value, '${yamlGrabbed}', was not set in file.`);
+	}
     }
 }
 class GrabSettingTab extends PluginSettingTab {
@@ -78,6 +85,8 @@ class GrabSettingTab extends PluginSettingTab {
 
 		containerEl.createEl('h2', {text: 'Quick Grab Settings Panel'});
 
+		const rTest = /^[A-Za-z]*$/;
+
 		new Setting(containerEl)
 			.setName('YAML')
 			.setDesc('The YAML variable to grab.')
@@ -85,9 +94,13 @@ class GrabSettingTab extends PluginSettingTab {
 				.setPlaceholder('YAML variable.')
 				.setValue(this.plugin.settings.yamlGrabbed)
 				.onChange(async (value) => {
-					console.log('YAML: ' + value);
-					this.plugin.settings.yamlGrabbed = value;
-					await this.plugin.saveSettings();
+					if (rTest.test(value) == true) {
+						this.plugin.settings.yamlGrabbed = value;
+						await this.plugin.saveSettings();
+					} else {
+						new Notice("Value is not yaml compatible. Try again.");
+						// TODO: limit to one notice to avoid spamming the user.
+					}
 				}));
 	}
 }
