@@ -8,34 +8,42 @@ const DEFAULT_SETTINGS: MyPluginSettings = {
 	yamlGrabbed: 'uri'
 }
 
-export default class MyPlugin extends Plugin {
+export default class quickGrab extends Plugin {
 	settings: GrabSettings;
-	console.log(this);
 	async onload() {
+		await this.loadSettings();
 		this.addCommand({
 			id: "open-files-url",
       			name: "Open Files URL",
 			editorCallback: (editor: Editor) => {
-				const obsidianApp = this.app;
-				new workbenchNameModal(obsidianApp).open();
+				new workbenchNameModal(this.app, this.settings).open();
 			},
-		});
+		})
+		this.addSettingTab(new GrabSettingTab(this.app, this));
 	}
 
-	//this.addSettingTab(new GrabSettingTab(this.app, this));
 
 	onunload() {
 
 	};
+
+	async loadSettings() {
+		this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
+	}
+
+	async saveSettings() {
+		await this.saveData(this.settings);
+	}
 }
 
 // https://github.com/ryanjamurphy/workbench-obsidian/blob/master/main.ts
 class workbenchNameModal extends FuzzySuggestModal<string> {
 	app: App;
 
-    constructor(app: App) {
-        super(app);
-		this.app = app;
+    constructor(app: App, settings: Settings) {
+        super(app, settings);
+	this.app = app;
+	this.settings = settings;
     }
 
     getItems(): string[] {
@@ -49,16 +57,16 @@ class workbenchNameModal extends FuzzySuggestModal<string> {
     }
 
     async onChooseItem(item: string, evt: MouseEvent | KeyboardEvent): void {
-	const {getPropertyValue} = app.plugins.plugins["metaedit"].api;
+	const {getPropertyValue} = app.plugins.plugins["metaedit"].api
 	//app.vault.getAbstractFileByPath(item)
-	const URL = await getPropertyValue("uri", item);
+	const URL = await getPropertyValue(this.settings.yamlGrabbed, item);
 	window.open(URL);
     }
 }
 class GrabSettingTab extends PluginSettingTab {
-	plugin: Grab;
+	plugin: quickGrab;
 
-	constructor(app: App, plugin: Grab) {
+	constructor(app: App, plugin: quickGrab) {
 		super(app, plugin);
 		this.plugin = plugin;
 	}
@@ -68,17 +76,17 @@ class GrabSettingTab extends PluginSettingTab {
 
 		containerEl.empty();
 
-		containerEl.createEl('h2', {text: 'Settings for my awesome plugin.'});
+		containerEl.createEl('h2', {text: 'Quick Grab Settings Panel'});
 
 		new Setting(containerEl)
-			.setName('Setting #1')
-			.setDesc('It\'s a secret')
+			.setName('YAML')
+			.setDesc('The YAML variable to grab.')
 			.addText(text => text
-				.setPlaceholder('Enter your secret')
-				.setValue(this.plugin.settings.mySetting)
+				.setPlaceholder('YAML variable.')
+				.setValue(this.plugin.settings.yamlGrabbed)
 				.onChange(async (value) => {
-					console.log('Secret: ' + value);
-					this.plugin.settings.mySetting = value;
+					console.log('YAML: ' + value);
+					this.plugin.settings.yamlGrabbed = value;
 					await this.plugin.saveSettings();
 				}));
 	}
