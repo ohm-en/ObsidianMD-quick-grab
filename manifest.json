@@ -1,10 +1,10 @@
 {
-	"id": "obsidian-sample-plugin",
-	"name": "Sample Plugin",
-	"version": "1.0.1",
+	"id": "ObsidianMD-quick-grab",
+	"name": "Quick Grab",
+	"version": "0.0.1",
 	"minAppVersion": "0.12.0",
-	"description": "This is a sample plugin for Obsidian. This plugin demonstrates some of the capabilities of the Obsidian API.",
-	"author": "Obsidian",
-	"authorUrl": "https://obsidian.md",
+	"description": "This plugin allows the user to select a file in which to open a pre-defined URL.",
+	"author": "OHM",
+	"authorUrl": "",
 	"isDesktopOnly": false
 }
