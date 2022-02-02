@@ -2,7 +2,7 @@
 	"name": "ObsidianMD-quick-grab",
 	"version": "0.0.1",
 	"description": "An ObsidianMD Plugin to 'grab' YAML data from a file and perform a choosen action.",
-	"main": "main.js",
+	"main": "src/main.js",
 	"scripts": {
 		"dev": "npx rollup --config rollup.config.js -w",
 		"build": "tsc -noEmit -skipLibCheck && node esbuild.config.mjs production",

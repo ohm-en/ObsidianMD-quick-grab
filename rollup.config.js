@@ -3,7 +3,7 @@ import copy from "rollup-plugin-copy";
 import typescript from '@rollup/plugin-typescript';
 
 export default {
-  input: 'main.ts',
+  input: 'src/main.ts',
   output: {
 	dir: "test-vault/.obsidian/plugins/ObsidianMD-Quick-Grab/",
         sourcemap: "inline",
