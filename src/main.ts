@@ -1,10 +1,14 @@
+// This file should be the sole bridge between ObsidianMD API and any other code.
+// As all examples of the ObsidianMD I've seen are based on objects (classes), this file will remain object orientated. However, as I prefer JavaScript for functional programming, my library components should be as such.
+
 import { App, Editor, MarkdownView, Modal, Notice, Plugin, PluginSettingTab, Setting, FuzzySuggestModal, SuggestModal } from 'obsidian';
+import { process } from "./processGrab";
 
 interface GrabSettings {
 	yamlGrabbed: string;
 }
 
-const DEFAULT_SETTINGS: MyPluginSettings = {
+const DEFAULT_SETTINGS: GrabSettings = {
 	yamlGrabbed: 'uri'
 }
 
@@ -16,7 +20,7 @@ export default class quickGrab extends Plugin {
 			id: "open-files-url",
       			name: "Open Files URL",
 			editorCallback: (editor: Editor) => {
-				new workbenchNameModal(this.app, this.settings).open();
+				new fileSelectModal(this.app, this.settings).open();
 			},
 		})
 		this.addSettingTab(new GrabSettingTab(this.app, this));
@@ -36,8 +40,8 @@ export default class quickGrab extends Plugin {
 	}
 }
 
-// https://github.com/ryanjamurphy/workbench-obsidian/blob/master/main.ts
-class workbenchNameModal extends FuzzySuggestModal<string> {
+// Thanks to this repo which was used as reference for FuzzySuggest: https://github.com/ryanjamurphy/workbench-obsidian/blob/master/main.ts
+class fileSelectModal extends FuzzySuggestModal<string> {
 	app: App;
 
     constructor(app: App, settings: Settings) {
@@ -47,8 +51,8 @@ class workbenchNameModal extends FuzzySuggestModal<string> {
     }
 
     getItems(): string[] {
-		const files = this.app.vault.getMarkdownFiles();
-		const fileList = files.map(file => file.name);
+	const files = this.app.vault.getMarkdownFiles();
+	const fileList = files.map(file => file.name);
         return fileList;
     }
 
@@ -57,14 +61,10 @@ class workbenchNameModal extends FuzzySuggestModal<string> {
     }
 
     async onChooseItem(item: string, evt: MouseEvent | KeyboardEvent): void {
-	const {getPropertyValue} = app.plugins.plugins["metaedit"].api
-	//app.vault.getAbstractFileByPath(item)
-	// TODO: regex should have a rebust default and be configurable
-	const rTest = /^https?:\/\/(?:[A-Za-z]*\.){1,}[A-Za-z]{2,3}/
-	const yamlGrabbed = this.settings.yamlGrabbed;
-	const URL = rTest.exec(await getPropertyValue(yamlGrabbed, item));
-	if (URL) {
-		window.open(URL);
+	const {getPropertyValue} = app.plugins.plugins["metaedit"].api;
+	const string = await getPropertyValue(this.settings.yamlGrabbed, item));
+	if (typeof(string) == 'string')  {
+		process(string, evt);
 	} else {
 		new Notice(`YAML value, '${yamlGrabbed}', was not set in file.`);
 	}
