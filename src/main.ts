@@ -1,106 +1,74 @@
-// This file should be the sole bridge between ObsidianMD API and any other code.
-// As all examples of the ObsidianMD I've seen are based on objects (classes), this file will remain object orientated. However, as I prefer JavaScript for functional programming, my library components should be as such.
+// This file exclusively contains the extended class Plugin as QuickGrab and its methods. Other imports from `obsidian` will be handled by `./apiAbstract.ts`;
 
-import { App, Editor, MarkdownView, Modal, Notice, Plugin, PluginSettingTab, Setting, FuzzySuggestModal, SuggestModal } from 'obsidian';
-import { process } from "./processGrab";
+// This import appears to be required in the main file for proper function;
+import { Plugin } from 'obsidian';
 
+// Provides functions to indirectly handle the `obsidian` classes with reference to `Plugin`;
+import { constructor as Api } from './fullAppAPI';
+
+// Provides functions to indirectly handle `obsidian` imports *without* reference to `Plugin`;
+//import { } from './lessAppAPI';
+
+// Contains methods with *no* direct dependencies on `obsidian`. These functions handle te "normal" work;
+import { constructor as Action } from './processGrab';
+
+
+// TODO: define in seperate file;
 interface GrabSettings {
 	yamlGrabbed: string;
 }
 
+// Generic defaults that are subject to change;
 const DEFAULT_SETTINGS: GrabSettings = {
 	yamlGrabbed: 'uri'
 }
 
-export default class quickGrab extends Plugin {
-	settings: GrabSettings;
+// This class allows access to the `obsidian` vault its enabled in
+export default class QuickGrab extends Plugin {
+
+	// Runs when `obsidian` loads or reloads the plugin;
 	async onload() {
-		await this.loadSettings();
-		this.addCommand({
+		// Constructs the abstracted Obsidian API layer (see `./apiAbstract.ts`);
+		const api = Api(this);
+
+		// TODO: refactor this implementation as it feels a bit tainted constructing it with `api`;
+		const action = Action(api);
+
+		// Load the saved settings; else, load the default;
+		const quickGrabSettings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
+
+		// TODO: create TS interface?
+		// Defines a list of objects used as input for `this.addCommand`;
+		const commands = [{
 			id: "open-files-url",
-      			name: "Open Files URL",
-			editorCallback: (editor: Editor) => {
-				new fileSelectModal(this.app, this.settings).open();
+			name: "Open Files URL",
+			callback: function() {
+				api.fuzzySuggestModal({ handler: action.getYAMLVal, data: { yaml: quickGrabSettings.yamlGrabbed } });
+			}
+		}];
+		// Arrow funtion (`=>`) implies access to `this`;
+		commands.forEach((command) => {
+			this.addCommand(command);
+		});
+
+		// TODO: Create TS interface?;
+		// TODO: `yamlGrabbed` should not be defined twice;
+		// Defines a list of objects used an input for `this.addSettingTab`;
+		const settingsTabTemplate = {
+			header: {
+				size: "h2",
+				text: "Quick Grab Settings Panel"
 			},
-		})
-		this.addSettingTab(new GrabSettingTab(this.app, this));
-	}
+			options: {
+				yamlGrabbed: {
+					name: "yaml",
+					desc: "The yaml variable to grab.",
+					placeholder: 'yaml variable'
+				}
+			}
+		};
 
-
-	onunload() {
-
-	};
-
-	async loadSettings() {
-		this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
-	}
-
-	async saveSettings() {
-		await this.saveData(this.settings);
-	}
-}
-
-// Thanks to this repo which was used as reference for FuzzySuggest: https://github.com/ryanjamurphy/workbench-obsidian/blob/master/main.ts
-class fileSelectModal extends FuzzySuggestModal<string> {
-	app: App;
-
-    constructor(app: App, settings: Settings) {
-        super(app, settings);
-	this.app = app;
-	this.settings = settings;
-    }
-
-    getItems(): string[] {
-	const files = this.app.vault.getMarkdownFiles();
-	const fileList = files.map(file => file.name);
-        return fileList;
-    }
-
-    getItemText(item: string): string {
-        return item;
-    }
-
-    async onChooseItem(item: string, evt: MouseEvent | KeyboardEvent): void {
-	const {getPropertyValue} = app.plugins.plugins["metaedit"].api;
-	const string = await getPropertyValue(this.settings.yamlGrabbed, item));
-	if (typeof(string) == 'string')  {
-		process(string, evt);
-	} else {
-		new Notice(`YAML value, '${yamlGrabbed}', was not set in file.`);
-	}
-    }
-}
-class GrabSettingTab extends PluginSettingTab {
-	plugin: quickGrab;
-
-	constructor(app: App, plugin: quickGrab) {
-		super(app, plugin);
-		this.plugin = plugin;
-	}
-
-	display(): void {
-		const {containerEl} = this;
-
-		containerEl.empty();
-
-		containerEl.createEl('h2', {text: 'Quick Grab Settings Panel'});
-
-		const rTest = /^[A-Za-z]*$/;
-
-		new Setting(containerEl)
-			.setName('YAML')
-			.setDesc('The YAML variable to grab.')
-			.addText(text => text
-				.setPlaceholder('YAML variable.')
-				.setValue(this.plugin.settings.yamlGrabbed)
-				.onChange(async (value) => {
-					if (rTest.test(value) == true) {
-						this.plugin.settings.yamlGrabbed = value;
-						await this.plugin.saveSettings();
-					} else {
-						new Notice("Value is not yaml compatible. Try again.");
-						// TODO: limit to one notice to avoid spamming the user.
-					}
-				}));
+		// Create a settings panel based on `settingsTabTemplate`;
+		this.addSettingTab(api.pluginSettingsTab({ quickGrabSettings, settingsTabTemplate }));
 	}
 }
