@@ -1,6 +1,8 @@
 import eslint from '@rollup/plugin-eslint';
 import copy from "rollup-plugin-copy";
 import typescript from '@rollup/plugin-typescript';
+//import nodeResolve from "@rollup/plugin-node-resolve";
+//import commonjs from "@rollup/plugin-commonjs";
 
 export default {
   input: 'src/main.ts',
@@ -12,6 +14,8 @@ export default {
   },
   plugins: [
     typescript(),
+    //nodeResolve({ browser: true }),
+    //commonjs(),
     eslint({
       /* your options */
     }),
@@ -20,5 +24,6 @@ export default {
 		{ src: "manifest.json", dest: "test-vault/.obsidian/plugins/ObsidianMD-Quick-Grab/" },
 		{ src: "styles.css", dest: "test-vault/.obsidian/plugins/ObsidianMD-Quick-Grab/" }
 	]}),
-  ]
+  ],
+  external: ['obsidian']
 };
