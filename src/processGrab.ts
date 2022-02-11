@@ -18,7 +18,7 @@ export function constructor(api: any) {
 	// Finds and opens the first URL in a string; else, `raiseError`;
 	const openURL = function (text: String): void {
 		// TODO: regex should have a rebust default and be configurable
-		const rTest = /https?:\/\/(?:[A-Za-z]*\.){1,}[A-Za-z]{2,3}/;
+		const rTest = /https?:\/\/(?:[A-Za-z0-9]*\.){1,}[A-Za-z]{2,3}/;
 		const URL = rTest.exec(text);
 		//pass/fail
 		if (URL) {
