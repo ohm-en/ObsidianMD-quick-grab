@@ -17,18 +17,18 @@ TODO: the naming convention sucks? Probably.
 
 */
 
-// This `modal` is responsible for prompted the user for a file selection;
+// This `modal` is responsible for prompting the user to select a file;
 class fuzzysuggestmodal extends FuzzySuggestModal<string> {
     constructor(app: App, spec: any) {
         super(app);
-	this.app = app;
-	this.handler = spec.handler; // make sure to omit `()` in the function when creating the class.
-	this.data = spec.data; // an object containing any additional data required for `runFunc`
+		this.app = app;
+		this.handler = spec.handler; // make sure to omit `()` in the function when creating the class.
+		this.data = spec.data; // an object containing any additional data required for `runFunc`
     }
 
     getItems(): string[] {
-	const files = this.app.vault.getMarkdownFiles();
-	const fileList = files.map(file => file.name);
+		const files = this.app.vault.getMarkdownFiles();
+		const fileList = files.map(file => file.path.replace(".md", ""));
         return fileList;
     }
 
@@ -37,7 +37,7 @@ class fuzzysuggestmodal extends FuzzySuggestModal<string> {
     }
 
     onChooseItem(item: string, evt: MouseEvent | KeyboardEvent) {
-	this.handler(item, evt, this.data); // pass selected data to a handler func;
+		this.handler(item, evt, this.data); // pass selected data to a handler func;
     }
 }
 
@@ -88,15 +88,16 @@ export function constructor(plugin: any) {
 
 	// Retrieves and returns the fronmatter from a file in the vault based on file name;
 	const getYaml = function(fileName: String) {
-		const tFile = app.vault.getAbstractFileByPath(fileName);
+		// TODO: Consider case where fileName does not end in `.md`;
+		const tFile = app.vault.getAbstractFileByPath(fileName + ".md");
 		if (tFile) {
 			const frontmatter = app.metadataCache.getFileCache(tFile).frontmatter;
 			if (frontmatter) {
 				return frontmatter;
 			}
-			raiseError({ text: `No front was found in '${fileName}.` });
+			raiseError({ text: `No front was found in '${fileName}'.` });
 		} else {
-			raiseError({ text: "No such file" });
+			raiseError({ text: `File '${fileName}' not found.` });
 		}
 	}
 
