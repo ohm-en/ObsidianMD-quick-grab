@@ -1,7 +1,7 @@
 import { raiseError } from './lessAppAPI';
 
-// TODO: Properly implement TS types;
-export function constructor(api: any) {
+// TODO: Properly implement TS types; TODO: TS types should not form a dependency loop!
+export function constructor(api: any, settings: any) {
 	const { getYaml } = api;
 
 	// TODO: refactor this whole funtion. Possibly combine with `getYAMLVal`;
@@ -18,7 +18,10 @@ export function constructor(api: any) {
 	// Finds and opens the first URL in a string; else, `raiseError`;
 	const openURL = function (text: String): void {
 		// TODO: regex should have a rebust default and be configurable
-		const rTest = /https?:\/\/(?:[A-Za-z0-9]*\.){1,}[A-Za-z]{2,3}/;
+		//const rTest = /https?:\/\/(?:[A-Za-z0-9]+\.)+[A-Za-z]+(?:\/[\w\d.]*)*(?:#[\w]*)?\??(?:[\w-]*=[\w\d+-]*&?)*/;
+		// TODO: Refactor;
+		const rTest = new RegExp(settings.urlRegex);
+		console.log(rTest);
 		const URL = rTest.exec(text);
 		//pass/fail
 		if (URL) {

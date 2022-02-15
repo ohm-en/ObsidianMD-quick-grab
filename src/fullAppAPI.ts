@@ -95,7 +95,7 @@ export function constructor(plugin: any) {
 			if (frontmatter) {
 				return frontmatter;
 			}
-			raiseError({ text: `No front was found in '${fileName}'.` });
+			raiseError({ text: `No frontmatter was found in '${fileName}'.` });
 		} else {
 			raiseError({ text: `File '${fileName}' not found.` });
 		}

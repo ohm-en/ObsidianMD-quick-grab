@@ -16,11 +16,13 @@ import { constructor as Action } from './processGrab';
 // TODO: define in seperate file;
 interface GrabSettings {
 	yamlGrabbed: string;
+	urlRegex: string; // TODO: TS type for regex?
 }
 
 // Generic defaults that are subject to change;
 const DEFAULT_SETTINGS: GrabSettings = {
-	yamlGrabbed: 'uri'
+	yamlGrabbed: 'uri',
+	urlRegex: String.raw`https?:\/\/(?:[A-Za-z0-9]+\.)+[A-Za-z]+(?:\/[\w\d.-]*)*(?:#[\w]*)?\??(?:[\w-]*=[\w\d+-]*&?)*`
 }
 
 // This class allows access to the `obsidian` vault its enabled in
@@ -31,11 +33,11 @@ export default class QuickGrab extends Plugin {
 		// Constructs the abstracted Obsidian API layer (see `./apiAbstract.ts`);
 		const api = Api(this);
 
-		// TODO: refactor this implementation as it feels a bit tainted constructing it with `api`;
-		const action = Action(api);
-
 		// Load the saved settings; else, load the default;
 		const quickGrabSettings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
+
+		// TODO: refactor this implementation as it feels a bit tainted constructing it with `api`;
+		const action = Action(api, quickGrabSettings);
 
 		// TODO: create TS interface?
 		// Defines a list of objects used as input for `this.addCommand`;
@@ -53,6 +55,7 @@ export default class QuickGrab extends Plugin {
 
 		// TODO: Create TS interface?;
 		// TODO: `yamlGrabbed` should not be defined twice;
+		// TODO: Update `fullAppAPI.ts` to support additional sections; TODO: No need to define urlRegex twice;
 		// Defines a list of objects used an input for `this.addSettingTab`;
 		const settingsTabTemplate = {
 			header: {
@@ -64,8 +67,14 @@ export default class QuickGrab extends Plugin {
 					name: "yaml",
 					desc: "The yaml variable to grab.",
 					placeholder: 'yaml variable'
+				},
+				urlRegex: {
+					name: "regex",
+					desc: "Sets the regular expression used when grabbing a URL from the frontmatter variable.",
+					placeholder: "regex"
 				}
 			}
+
 		};
 
 		// Create a settings panel based on `settingsTabTemplate`;
